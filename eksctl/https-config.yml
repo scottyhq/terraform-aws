@@ -1,0 +1,26 @@
+proxy:
+  secretToken: "{{ jupyterhub.secretToken }}"
+  https:
+    hosts:
+    - "{{ jupyterhub.hostIP }}"
+    letsencrypt:
+      contactEmail: "{{ jupyterhub.contactEmail }}"
+  service:
+    loadBalancerIP: "REPLACE"
+auth:
+  type: github
+  github:
+    clientId: "{{ auth.clientId }}"
+    clientSecret: "{{ auth.clientSecret }}"
+    callbackUrl: "https://{{ jupyterhub.hostIP }}/hub/oauth_callback"
+    orgWhitelist:
+        - "{{ auth.orgWhitelist }}"
+  scopes:
+    - "read:user"
+    - "user:email"
+    - "read:org"
+  admin:
+    access: true
+    users:
+      - "{{ auth.adminUser }}"
+

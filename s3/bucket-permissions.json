@@ -1,0 +1,25 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::783380859522:role/eksctl-pangeo-nasa-addon-iamserviceaccount-n-Role1-1O7RL7XRIFHMX"
+            },
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::uturuncu-insar"
+        },
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::783380859522:role/eksctl-pangeo-nasa-addon-iamserviceaccount-n-Role1-1O7RL7XRIFHMX"
+            },
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:PutObjectAcl"
+            ],
+            "Resource": "arn:aws:s3:::uturuncu-insar/*"
+        }
+    ]
+}

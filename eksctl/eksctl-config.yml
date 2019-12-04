@@ -1,0 +1,104 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+# list of zones (otherwise automatic)
+#availabilityZones: {{eksctl.zones}}
+
+# CHANGE these if you want:
+metadata:
+  name: jupyterhub
+  region: us-west-2
+
+iam:
+ withOIDC: true
+ serviceAccounts:
+  - metadata:
+      name: cluster-autoscaler
+      namespace: kube-system
+    attachPolicy: # inline policy can be defined along with `attachPolicyARNs`
+      Version: "2012-10-17"
+      Statement:
+      - Effect: Allow
+        Action:
+          - "autoscaling:DescribeAutoScalingGroups"
+          - "autoscaling:DescribeAutoScalingInstances"
+          - "autoscaling:DescribeLaunchConfigurations"
+          - "autoscaling:DescribeTags"
+          - "autoscaling:SetDesiredCapacity"
+          - "autoscaling:TerminateInstanceInAutoScalingGroup"
+          - "ec2:DescribeLaunchTemplateVersions"
+        Resource: '*'
+
+nodeGroups:
+  - name: core
+    instanceType: m5.large
+    minSize: 1
+    maxSize: 1
+    desiredCapacity: 1
+    privateNetworking: true
+    volumeSize: 100
+    volumeType: gp2
+    labels:
+      node-role.kubernetes.io/core: core
+      hub.jupyter.org/node-purpose: core
+    ami: auto
+    amiFamily: Ubuntu1804
+  - name: user-spot
+    minSize: 0
+    maxSize: 100
+    desiredCapacity: 0
+    privateNetworking: true
+    instancesDistribution:
+      #maxPrice: 0.017 #default to max price = on demand price
+      instanceTypes:
+        - m5.2xlarge
+        - m4.2xlarge # At least two instance types should be specified
+      spotInstancePools: 2
+      onDemandBaseCapacity: 0
+      onDemandPercentageAboveBaseCapacity: 0 # all spot
+    volumeSize: 100
+    volumeType: gp2
+    labels:
+      node-role.kubernetes.io/user: user
+      hub.jupyter.org/node-purpose: user
+    taints:
+      hub.jupyter.org/dedicated: 'user:NoSchedule'
+    tags:
+        k8s.io/cluster-autoscaler/node-template/label/hub.jupyter.org/node-purpose: user
+        k8s.io/cluster-autoscaler/node-template/taint/hub.jupyter.org/dedicated: 'user:NoSchedule'
+    ami: auto
+    amiFamily: Ubuntu1804
+    preBootstrapCommands: # see https://github.com/weaveworks/eksctl/issues/1310
+      - yum install -y iptables-services
+      - iptables --insert FORWARD 1 --in-interface eni+ --destination 169.254.169.254/32 --jump DROP
+      - iptables-save | tee /etc/sysconfig/iptables
+      - systemctl enable --now iptables
+  - name: worker-spot
+    minSize: 0
+    maxSize: 100
+    desiredCapacity: 0
+    privateNetworking: true
+    instancesDistribution:
+      instanceTypes:
+        - r5.2xlarge
+        - r4.2xlarge
+      spotInstancePools: 2
+      onDemandBaseCapacity: 0
+      onDemandPercentageAboveBaseCapacity: 0
+    volumeSize: 100
+    volumeType: gp2
+    labels:
+      node-role.kubernetes.io/worker: worker
+      k8s.dask.org/node-purpose: worker
+    taints:
+      k8s.dask.org/dedicated: 'worker:NoSchedule'
+    tags:
+        k8s.io/cluster-autoscaler/node-template/label/k8s.dask.org/node-purpose: worker
+        k8s.io/cluster-autoscaler/node-template/taint/k8s.dask.org/dedicated: "worker:NoSchedule"
+    ami: auto
+    amiFamily: Ubuntu1804
+    preBootstrapCommands: # see https://github.com/weaveworks/eksctl/issues/1310
+      - yum install -y iptables-services
+      - iptables --insert FORWARD 1 --in-interface eni+ --destination 169.254.169.254/32 --jump DROP
+      - iptables-save | tee /etc/sysconfig/iptables
+      - systemctl enable --now iptables

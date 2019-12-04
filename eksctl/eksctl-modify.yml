@@ -1,0 +1,28 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: jupyterhub
+  region: us-west-2
+
+cloudWatch:
+  clusterLogging:
+    enableTypes: ["*"]
+
+# Private endpoint must be changed later
+vpc:
+ clusterEndpoints:
+   publicAccess:  false
+   privateAccess: true
+
+# Must run after initial jupyterhub deployment to connect to existing service account
+iam:
+ withOIDC: true
+ serviceAccounts:
+   - metadata:
+       name: daskkubernetes
+       namespace: jupyterhub
+       labels:
+         aws-usage: "application"
+     attachPolicyARNs:
+       - {{ eksctl.podPolicy }}
