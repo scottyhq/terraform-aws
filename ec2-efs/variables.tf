@@ -1,13 +1,21 @@
 variable "region" {
-  default = "us-west-2"
+  default = "us-east-1"
+}
+
+variable "az" {
+  default = "us-east-1a"
 }
 
 variable "profile" {
   default = "default"
 }
 
+variable "key" {
+  default = "eks-pangeo-nasa-us-east-1"
+}
+
 variable "instance" {
-  default = "c5d.xlarge"
+  default = "t3a.medium"
 }
 
 # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html

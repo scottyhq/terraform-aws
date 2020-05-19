@@ -130,7 +130,7 @@ spec:
     spec:
       serviceAccountName: cluster-autoscaler
       containers:
-        - image: k8s.gcr.io/cluster-autoscaler:v{$version}
+        - image: k8s.gcr.io/cluster-autoscaler:v${version}
           name: cluster-autoscaler
           resources:
             limits:
